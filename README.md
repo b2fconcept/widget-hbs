@@ -11,26 +11,26 @@ Il se compose d'une série de *plugin jquery* qui s'interfacent avec des *templat
 Le HBS peut s'intégrer de plusieurs façons : 
 * via un accès direct à connectizz (WS REST/XML)
 * via une intégration par B2F au sein du HBS historique (dordogne.perigord-reservation.com , vacances-lotetgaronne.com , fr-comte.hbs.b2f-concept.net , montagne-jura-hiver-v2.hbs.b2f-concept.net , ...)
-..* site autonome
-..* site intégré en iframe au sein d'un autre site
+  * site autonome
+  * site intégré en iframe au sein d'un autre site
 * au sein de n'importe quel site via un widget 
-..* widget historique
-..* nouveau widget (https://github.com/b2fconcept/widget-hbs)
+  * widget historique
+  * nouveau widget (https://github.com/b2fconcept/widget-hbs)
 
 
 
 ## personalisation
 vous pouvez personnaliser le rendu à plusieurs niveaux : 
 1. via un themeroller qui vous permet de modifier 
-..* les parametres des plugins 
-..* la feuille de style (en compilant une feuille de style less)
+  * les parametres des plugins 
+  * la feuille de style (en compilant une feuille de style less)
 2. via les templates handlebars
-..* par defaut, les templates génériques sont chargés
-..* vous pouvez definir vos propores templates
-..* ou surcharger ceux par defaut
+  * par defaut, les templates génériques sont chargés
+  * vous pouvez definir vos propores templates
+  * ou surcharger ceux par defaut
 3. via les plugins jQuery open source
-..* vous pouvez intégrer nos plugins hébérgés sur les serveurs B2F
-..* vous pouvez les modifier et les stocker sur vos serveurs
+  * vous pouvez intégrer nos plugins hébérgés sur les serveurs B2F
+  * vous pouvez les modifier et les stocker sur vos serveurs
 
 
 
