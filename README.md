@@ -21,14 +21,15 @@ Le HBS peut s'intégrer de plusieurs façons :
 
 ## personalisation
 vous pouvez personnaliser le rendu à plusieurs niveaux : 
-1  via un themeroller qui vous permet de modifier 
+
+1.  via un themeroller qui vous permet de modifier 
   * les parametres des plugins 
   * la feuille de style (en compilant une feuille de style less)
-2  via les templates handlebars
+2.  via les templates handlebars
   * par defaut, les templates génériques sont chargés
   * vous pouvez definir vos propores templates
   * ou surcharger ceux par defaut
-3  via les plugins jQuery open source
+3.  via les plugins jQuery open source
   * vous pouvez intégrer nos plugins hébérgés sur les serveurs B2F
   * vous pouvez les modifier et les stocker sur vos serveurs
 
