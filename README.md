@@ -21,14 +21,14 @@ Le HBS peut s'intégrer de plusieurs façons :
 
 ## personalisation
 vous pouvez personnaliser le rendu à plusieurs niveaux : 
-1. via un themeroller qui vous permet de modifier 
+1  via un themeroller qui vous permet de modifier 
   * les parametres des plugins 
   * la feuille de style (en compilant une feuille de style less)
-2. via les templates handlebars
+2  via les templates handlebars
   * par defaut, les templates génériques sont chargés
   * vous pouvez definir vos propores templates
   * ou surcharger ceux par defaut
-3. via les plugins jQuery open source
+3  via les plugins jQuery open source
   * vous pouvez intégrer nos plugins hébérgés sur les serveurs B2F
   * vous pouvez les modifier et les stocker sur vos serveurs
 
@@ -42,13 +42,13 @@ vous pouvez personnaliser le rendu à plusieurs niveaux :
 * bootstrap-datepicker
 * typeahead.js 
  
- ## licence
- Le code source vous est fournit sous licence GPL V3, si vous employez ce code, merci de le forker sous gitHub et de nous faire des pull requests à chaque modification de code.
- Tant que possible nous souhaitons intégrer vos contributions au sein de notre branche.
+## licence
+Le code source vous est fournit sous licence GPL V3, si vous employez ce code, merci de le forker sous gitHub et de nous faire des pull requests à chaque modification de code.
+Tant que possible nous souhaitons intégrer vos contributions au sein de notre branche.
  
- ## stabilité
- Ce code est une version beta, son API est amenée à évoluer. 
- L'integration des systemes de reservations se fera au cas par cas, ce qui veut dire que :
- * cette partie est instable (API non figée)
- * aucun connecteur n'est encore codé au sein de la fiche detail
- * l'idée actuelle est de créer un widget par connecteur.
+## stabilité
+Ce code est une version beta, son API est amenée à évoluer. 
+L'integration des systemes de reservations se fera au cas par cas, ce qui veut dire que :
+* cette partie est instable (API non figée)
+* aucun connecteur n'est encore codé au sein de la fiche detail
+* l'idée actuelle est de créer un widget par connecteur.
