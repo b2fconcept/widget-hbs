@@ -1,0 +1,484 @@
+<?php 
+/*
+   widget personnalisable pour le HBS (connectizz)
+   Copyright (C) 2016  B2f-concept
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation version 3 of the License.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software Foundation,
+   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+   
+   vous pouvez nous contacter via notre site web http://www.b2f-concept.com rubrique contact
+*/
+
+
+
+header("Content-type: application/javascript"); 
+
+
+
+//tentative de cache
+session_cache_limiter('public');
+
+$last_modified_time = filemtime($_SERVER['SCRIPT_FILENAME']);
+$etag = md5_file($_SERVER['SCRIPT_FILENAME']).$_GET['langue'];
+
+header("Last-Modified: ".gmdate("D, d M Y H:i:s", $last_modified_time)." GMT");
+header("Etag: $etag");
+
+if (@strtotime(@$_SERVER['HTTP_IF_MODIFIED_SINCE']) == $last_modified_time || trim(@$_SERVER['HTTP_IF_NONE_MATCH']) == $etag) {
+	header("HTTP/1.1 304 Not Modified");
+	exit;
+}
+
+header("Pragma: public");
+$expires = 60*60*24*14;
+header('Cache-Control: maxage='.$expires.', must-revalidate');
+header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
+//fin de tentative de cache
+
+
+
+ob_start('ob_gzhandler');
+
+require_once('B2f/BootStrap.php');
+@session_write_close();
+
+$lang = B2f_Langue::getInstance();
+if (isset($_GET['langue'])) {
+	$lang->setLangue($_GET['langue']);
+}
+
+//ici on force la surcharge des GLOBALS si on est dans un contexte marque blanche
+if(@$_GET['mbKey']!=''){
+	B2f_Request::setMarqueBlancheKey($_GET['mbKey']);
+	B2f_Config::overideGlobals();
+}
+
+$trad = $GLOBALS['b2f']['translate'];
+$trad->addPage('Connectizz');
+
+$url = new B2f_View_Helper_Url();
+$smarty_obj = null;//jsuqu'à preuve du contraire, je ne le declare que pour le passer par reference à B2f_View_Helper_Url qui ne s'en sert pas donc pas besoin d'instancier une objet smarty rellement
+
+/*
+ * exemples de code accessibles (surtout des helper)
+// - <?=$url->href(array('name'=>'panier-miseajour'), $smarty_obj)?>
+// - <?=$trad->_('VEL_PrixProduit_Alerte_Quantite')?>
+// - <?=$trad->js("VEL_Nb_Personne_Non_Renseigner") ?>
+*/
+
+
+
+$arrayTradJS = array(
+
+	"par personne"					=> "par personne",
+	"selon disponibilités"			=> "selon disponibilités",
+	"Détail & reservation"			=> "Détail & reservation",
+	"Prix, Détail & reservation"	=> "Prix, Détail & reservation",
+	'pour $nuit nuit(s)'			=> 'pour $nuit nuit(s)', 
+	'jusqu\'a $nbPaxMax personnes'	=> 'jusqu\'a $nbPaxMax personnes', 
+	
+	"par personne"					=> "par personne",
+	"par personne"					=> "par personne",
+	"par personne"					=> "par personne",
+	"par personne"					=> "par personne",
+	"par personne"					=> "par personne",
+	
+	
+	//"pageDetail" : {reference:produit_ref, fournisseur_id:fournisseur_id, centrale_id:centrale_id, agence_id:agence_id, commune:commune, titre:titre);
+	"pageDetail"					=> '/fr/$type-a-$commune-$titre-$fournisseur_id-$centrale_id-$agence_id-$reference.html?debut=$debut&duree=$duree',
+	"Equipements"					=> 'Equipements : ',
+	"Le prix comprends"				=> 'Le prix comprends : ',
+	"Le prix ne comprends pas"		=> 'Le prix ne comprends pas : ',
+
+	"tifv3_null"	=> " ", 
+	"tifv3_1"	=> " ", 
+	"tifv3_2"	=> " ", 
+	"tifv3_3"	=> " ", 
+	"tifv3_4"	=> " ", 
+	
+	/**
+	* ci dessous : 
+	* tous les champs tifv3, je l'ai hardcodé, c'est plus simple, voici la requete : 
+	*
+	SELECT  DISTINCT CONCAT('"tifv3_',  valeur, '"') , ':' , CONCAT('"', lib, '",')
+FROM produit_caracteritique 
+INNER JOIN tifv3_thesaurus ON tifv3_thesaurus.thesaurus = valeur
+WHERE caracteristique_id IN (32,33,34)
+UNION DISTINCT
+SELECT DISTINCT CONCAT('"tifv3_',  libelle, '"') , ':' , CONCAT('"', lib, '",')
+FROM produit_caracteristique_libelle 
+INNER JOIN tifv3_thesaurus ON tifv3_thesaurus.thesaurus = libelle
+WHERE caracteristique_id IN (32,33,34);
+	*
+	*
+	*/
+	"tifv3_02.01.01.02.23"           =>       "Escrime", 
+	"tifv3_02.01.01.02.25"           =>       "Golf",
+	"tifv3_02.01.01.02.67"           =>       "Surf",
+	"tifv3_02.01.01.02.70"           =>       "Tennis",  
+	"tifv3_02.01.01.02.76"           =>       "Voile",   
+	"tifv3_02.01.01.03.03"           =>       "Cours",   
+	"tifv3_02.01.03.03.38"           =>       "Randonnée",  
+	"tifv3_02.01.04.01.04"           =>       "Chalet",  
+	"tifv3_02.01.04.01.06"           =>       "Maison",  
+	"tifv3_02.01.08.01.14"           =>       "Discothèque",
+	"tifv3_02.01.08.01.24"           =>       "Piscine", 
+	"tifv3_02.01.08.01.31"           =>       "Parc à thèmes", 
+	"tifv3_02.01.08.01.33"           =>       "Salle de remise en forme",
+	"tifv3_02.01.08.01.40"           =>       "Thalassothérapie",   
+	"tifv3_02.01.11.09.24"           =>       "Ferme",   
+	"tifv3_02.01.13.01.08"           =>       "Restauration Rapide", 
+	"tifv3_04.04.04"                 =>       "Serveur vocal",   
+	"tifv3_06.04.01.06.03"           =>       "Grand confort",   
+	"tifv3_06.05"                    =>       "Tourisme et handicap",
+	"tifv3_08.02.03.14"              =>       "Pied des pistes", 
+	"tifv3_10.02.21"                 =>       "Personnes à mobilité réduite", 
+	"tifv3_13.02.04"                 =>       "Carte bleue", 
+	"tifv3_13.02.11"                 =>       "Chèques Vacances",   
+	"tifv3_13.04.03.02"              =>       "Petit-déjeuner", 
+	"tifv3_14.01.01"                 =>       "Appartements",
+	"tifv3_14.02.08"                 =>       "Garage",  
+	"tifv3_14.02.09"                 =>       "Garderie",
+	"tifv3_14.02.13"                 =>       "Parking", 
+	"tifv3_14.02.15"                 =>       "Restaurant",  
+	"tifv3_14.02.18"                 =>       "Salle d'exposition",  
+	"tifv3_14.02.24"                 =>       "Salle de réunion",   
+	"tifv3_14.02.26"                 =>       "Salle de séminaire", 
+	"tifv3_14.03.01.04"              =>       "Maisons indépendantes",  
+	"tifv3_14.03.02.05"              =>       "Balcon",  
+	"tifv3_14.03.02.08"              =>       "Cave",
+	"tifv3_14.03.02.13"              =>       "Cuisine", 
+	"tifv3_14.03.02.17"              =>       "Garage",  
+	"tifv3_14.03.02.22"              =>       "Jardin",  
+	"tifv3_14.03.02.26"              =>       "Salon",   
+	"tifv3_14.03.02.30"              =>       "Terrasse",
+	"tifv3_15.02.14"                 =>       "Conférences",
+	"tifv3_15.02.15"                 =>       "Dégustation de produits",
+	"tifv3_15.02.16"                 =>       "Équitation", 
+	"tifv3_15.02.21"                 =>       "Golf",
+	"tifv3_15.02.30"                 =>       "Parcours de santé",  
+	"tifv3_15.02.38"                 =>       "Produits fermiers",   
+	"tifv3_15.02.42"                 =>       "Ski alpin",   
+	"tifv3_15.02.59"                 =>       "Thalassothérapie",   
+	"tifv3_15.02.61"                 =>       "Thermalisme", 
+	"tifv3_15.02.62"                 =>       "Thermoludisme",   
+	"tifv3_15.03.01"                 =>       "Accès Internet", 
+	"tifv3_15.03.02"                 =>       "Accès Internet dans les chambres",   
+	"tifv3_15.03.03"                 =>       "Air conditionné",
+	"tifv3_15.03.04"                 =>       "Aspirateur",  
+	"tifv3_15.03.06"                 =>       "Baignoire",   
+	"tifv3_15.03.07"                 =>       "Câble / Satellite",  
+	"tifv3_15.03.08"                 =>       "Canal+",  
+	"tifv3_15.03.09"                 =>       "Chambres non fumeur", 
+	"tifv3_15.03.10"                 =>       "Chauffage",   
+	"tifv3_15.03.11"                 =>       "Cheminée",   
+	"tifv3_15.03.13"                 =>       "Cheminée en fonctionnement", 
+	"tifv3_15.03.14"                 =>       "Climatisation",   
+	"tifv3_15.03.15"                 =>       "Coffre",  
+	"tifv3_15.03.16"                 =>       "Congélateur",
+	"tifv3_15.03.17"                 =>       "Cuisine - coin cuisine",  
+	"tifv3_15.03.18"                 =>       "Double vitrage",  
+	"tifv3_15.03.19"                 =>       "Douche",  
+	"tifv3_15.03.21"                 =>       "Draps et linges compris", 
+	"tifv3_15.03.22"                 =>       "Eau chaude",  
+	"tifv3_15.03.23"                 =>       "Four",
+	"tifv3_15.03.24"                 =>       "Installations pour handicapés",  
+	"tifv3_15.03.26"                 =>       "Lavabos eau chaude",  
+	"tifv3_15.03.27"                 =>       "Lave linge collectif",
+	"tifv3_15.03.28"                 =>       "Lave linge privatif", 
+	"tifv3_15.03.29"                 =>       "Lave vaisselle",  
+	"tifv3_15.03.30"                 =>       "Lavoirs eau chaude",  
+	"tifv3_15.03.31"                 =>       "Lit bébé",  
+	"tifv3_15.03.32"                 =>       "Lit enfant",  
+	"tifv3_15.03.33"                 =>       "Machines à laver",   
+	"tifv3_15.03.34"                 =>       "Magnétoscope",   
+	"tifv3_15.03.35"                 =>       "Mini-bar",
+	"tifv3_15.03.37"                 =>       "Prise de télévision",   
+	"tifv3_15.03.38"                 =>       "Prise réseau (accès Internet depuis le logement)",  
+	"tifv3_15.03.39"                 =>       "Radio",   
+	"tifv3_15.03.40"                 =>       "Réfrigérateur", 
+	"tifv3_15.03.41"                 =>       "Sanitaires chauffés",
+	"tifv3_15.03.42"                 =>       "Sèche cheveux",  
+	"tifv3_15.03.43"                 =>       "Sèche linge collectif",  
+	"tifv3_15.03.44"                 =>       "Sèche linge privatif",   
+	"tifv3_15.03.45"                 =>       "Sèche serviettes",   
+	"tifv3_15.03.46"                 =>       "Chaise bébé",   
+	"tifv3_15.03.47"                 =>       "Table à langer", 
+	"tifv3_15.03.52"                 =>       "Télécopie", 
+	"tifv3_15.03.53"                 =>       "Téléphone", 
+	"tifv3_15.03.54"                 =>       "Téléphone direct",  
+	"tifv3_15.03.55"                 =>       "Téléphone réservé aux clients",   
+	"tifv3_15.03.56"                 =>       "Télévision",
+	"tifv3_15.03.58"                 =>       "Télévision couleur",
+	"tifv3_15.03.60"                 =>       "Terrasse privative",  
+	"tifv3_15.03.61"                 =>       "Terrasse privative/Balcon",   
+	"tifv3_15.03.62"                 =>       "Toilette séparée",  
+	"tifv3_15.05.02"                 =>       "Abris pour vélo ou VTT", 
+	"tifv3_15.05.04"                 =>       "Accès handicapés",  
+	"tifv3_15.05.05"                 =>       "Aire de jeux",
+	"tifv3_15.05.06"                 =>       "Aire de pique-nique", 
+	"tifv3_15.05.07"                 =>       "Ascenseur",   
+	"tifv3_15.05.09"                 =>       "Bac à sable",
+	"tifv3_15.05.10"                 =>       "Balançoire", 
+	"tifv3_15.05.101"                =>       "Salle de sport",  
+	"tifv3_15.05.103"                =>       "Salle hors-sac couverte", 
+	"tifv3_15.05.104"                =>       "Coin salon",  
+	"tifv3_15.05.105"                =>       "Salon",   
+	"tifv3_15.05.106"                =>       "Salon de jardin", 
+	"tifv3_15.05.107"                =>       "Salon de télévision",   
+	"tifv3_15.05.108"                =>       "Sanitaire commun",
+	"tifv3_15.05.110"                =>       "Sauna",   
+	"tifv3_15.05.111"                =>       "Sentiers balisés",   
+	"tifv3_15.05.116"                =>       "Tables de pique-nique",   
+	"tifv3_15.05.117"                =>       "Tennis",  
+	"tifv3_15.05.118"                =>       "Terrain clos",
+	"tifv3_15.05.119"                =>       "Terrain de jeux équipé",
+	"tifv3_15.05.12"                 =>       "Bar", 
+	"tifv3_15.05.120"                =>       "Terrain fermé la nuit",  
+	"tifv3_15.05.121"                =>       "Terrain non clos",
+	"tifv3_15.05.122"                =>       "Terrain ombragé",
+	"tifv3_15.05.123"                =>       "Terrasse",
+	"tifv3_15.05.124"                =>       "Terrasse balcon", 
+	"tifv3_15.05.125"                =>       "Toboggan",
+	"tifv3_15.05.126"                =>       "Toilette séparée",  
+	"tifv3_15.05.127"                =>       "Toilettes",   
+	"tifv3_15.05.128"                =>       "Tous commerces",  
+	"tifv3_15.05.13"                 =>       "Bar à thème",   
+	"tifv3_15.05.132"                =>       "Terrain semi-ombragé",   
+	"tifv3_15.05.14"                 =>       "Barbecue",
+	"tifv3_15.05.17"                 =>       "Bibliothèque",   
+	"tifv3_15.05.18"                 =>       "Billard", 
+	"tifv3_15.05.19"                 =>       "Boulodrome",  
+	"tifv3_15.05.20"                 =>       "Boutiques",   
+	"tifv3_15.05.21"                 =>       "Bowling", 
+	"tifv3_15.05.22"                 =>       "Branchements d'eau",  
+	"tifv3_15.05.23"                 =>       "Branchements électriques",   
+	"tifv3_15.05.24"                 =>       "Cabine téléphonique / Point Phone", 
+	"tifv3_15.05.25"                 =>       "Canoë-Kayak",
+	"tifv3_15.05.26"                 =>       "Caravaneige", 
+	"tifv3_15.05.29"                 =>       "Cinéma", 
+	"tifv3_15.05.31"                 =>       "Cour",
+	"tifv3_15.05.32"                 =>       "Discothèque",
+	"tifv3_15.05.33"                 =>       "Emplacement camping car", 
+	"tifv3_15.05.34"                 =>       "Entrée indépendante",   
+	"tifv3_15.05.35"                 =>       "Equipements enfants (Lits, chaises)", 
+	"tifv3_15.05.36"                 =>       "Etablissement thermal",   
+	"tifv3_15.05.37"                 =>       "Etage",   
+	"tifv3_15.05.39"                 =>       "Garage",  
+	"tifv3_15.05.41"                 =>       "Garage privé",   
+	"tifv3_15.05.44"                 =>       "Hammam",  
+	"tifv3_15.05.47"                 =>       "Jacuzzi", 
+	"tifv3_15.05.48"                 =>       "Jardin",  
+	"tifv3_15.05.50"                 =>       "Jardin indépendant", 
+	"tifv3_15.05.51"                 =>       "Jardin Ombragé", 
+	"tifv3_15.05.52"                 =>       "Jeux pour enfants",   
+	"tifv3_15.05.55"                 =>       "Lac et Plan d'eau",   
+	"tifv3_15.05.57"                 =>       "Matériel de sport",  
+	"tifv3_15.05.59"                 =>       "Mini-golf",   
+	"tifv3_15.05.60"                 =>       "Mitoyen locataire",   
+	"tifv3_15.05.62"                 =>       "Ombrage partiel", 
+	"tifv3_15.05.63"                 =>       "Parc",
+	"tifv3_15.05.64"                 =>       "Parking", 
+	"tifv3_15.05.65"                 =>       "Parking autocar", 
+	"tifv3_15.05.67"                 =>       "Parking privé",  
+	"tifv3_15.05.68"                 =>       "Patinoire",   
+	"tifv3_15.05.69"                 =>       "Piano bar",   
+	"tifv3_15.05.70"                 =>       "Piscine", 
+	"tifv3_15.05.71"                 =>       "Piscine couverte",
+	"tifv3_15.05.72"                 =>       "Piscine découverte", 
+	"tifv3_15.05.73"                 =>       "Piscine enfants", 
+	"tifv3_15.05.74"                 =>       "Piscine plein air",   
+	"tifv3_15.05.78"                 =>       "Piste de ski alpin",  
+	"tifv3_15.05.79"                 =>       "Piste de ski de fond",
+	"tifv3_15.05.80"                 =>       "Plage",   
+	"tifv3_15.05.82"                 =>       "Plan d'eau",  
+	"tifv3_15.05.83"                 =>       "Plain Pied",  
+	"tifv3_15.05.86"                 =>       "Restaurant",  
+	"tifv3_15.05.87"                 =>       "Rivière",
+	"tifv3_15.05.88"                 =>       "Salle à manger privée", 
+	"tifv3_15.05.90"                 =>       "Salle d'eau commune", 
+	"tifv3_15.05.91"                 =>       "Salle d'eau privée", 
+	"tifv3_15.05.93"                 =>       "Salle de bain privée",   
+	"tifv3_15.05.94"                 =>       "Salle de billard",
+	"tifv3_15.05.95"                 =>       "Salle de gym",
+	"tifv3_15.05.96"                 =>       "Salle de jeux",   
+	"tifv3_15.05.97"                 =>       "Salle de projection", 
+	"tifv3_15.05.98"                 =>       "Salle de remise en forme",
+	"tifv3_15.05.99"                 =>       "Salle de réunion",   
+	"tifv3_15.06.01"                 =>       "Accueil nuit",
+	"tifv3_15.06.04"                 =>       "Animation thématique spécifique",   
+	"tifv3_15.06.05"                 =>       "Animaux acceptés",   
+	"tifv3_15.06.06"                 =>       "Alimentation/Point alimentation", 
+	"tifv3_15.06.09"                 =>       "Baby Club",   
+	"tifv3_15.06.10"                 =>       "Baby Sitter", 
+	"tifv3_15.06.11"                 =>       "Banquet", 
+	"tifv3_15.06.12"                 =>       "Bar / buvette",   
+	"tifv3_15.06.14"                 =>       "Bibliothèque",   
+	"tifv3_15.06.15"                 =>       "Blanchisserie",   
+	"tifv3_15.06.16"                 =>       "Boutique",
+	"tifv3_15.06.17"                 =>       "Bureau de change",
+	"tifv3_15.06.19"                 =>       "Cabine téléphonique / Point Phone", 
+	"tifv3_15.06.20"                 =>       "Circuits touristiques",   
+	"tifv3_15.06.21"                 =>       "Club Adolescents",
+	"tifv3_15.06.24"                 =>       "Coffres clients", 
+	"tifv3_15.06.25"                 =>       "Commerce alimentaire",
+	"tifv3_15.06.26"                 =>       "Commerces",   
+	"tifv3_15.06.27"                 =>       "Commerces 1ère nécessité", 
+	"tifv3_15.06.28"                 =>       "Cyber espace / bornes accès Internet",   
+	"tifv3_15.06.29"                 =>       "Demi-pension",
+	"tifv3_15.06.30"                 =>       "Dépôt de gaz",  
+	"tifv3_15.06.31"                 =>       "Dépôt de glace",
+	"tifv3_15.06.32"                 =>       "Documentation Touristique",   
+	"tifv3_15.06.34"                 =>       "Espace jeux", 
+	"tifv3_15.06.36"                 =>       "Garderie",
+	"tifv3_15.06.37"                 =>       "Halte Garderie",  
+	"tifv3_15.06.39"                 =>       "Information", 
+	"tifv3_15.06.40"                 =>       "Informations touristiques",   
+	"tifv3_15.06.41"                 =>       "Lave linge",  
+	"tifv3_15.06.42"                 =>       "Lave linge collectif",
+	"tifv3_15.06.43"                 =>       "Librairie",   
+	"tifv3_15.06.44"                 =>       "Location bungalow",   
+	"tifv3_15.06.46"                 =>       "Location caravanes",  
+	"tifv3_15.06.47"                 =>       "Location de linge",   
+	"tifv3_15.06.48"                 =>       "Location de matériel",   
+	"tifv3_15.06.51"                 =>       "Location de mobil home",  
+	"tifv3_15.06.53"                 =>       "Location de vélos",  
+	"tifv3_15.06.56"                 =>       "Location matériel de sport", 
+	"tifv3_15.06.57"                 =>       "Location tente/caravane", 
+	"tifv3_15.06.58"                 =>       "Location tentes", 
+	"tifv3_15.06.59"                 =>       "Massages",
+	"tifv3_15.06.62"                 =>       "Ménage quotidien",   
+	"tifv3_15.06.63"                 =>       "Messages téléphoniques",
+	"tifv3_15.06.65"                 =>       "Navette aéroport ou gare",   
+	"tifv3_15.06.67"                 =>       "Nettoyage / ménage", 
+	"tifv3_15.06.68"                 =>       "Nettoyage / ménage en fin de séjour",   
+	"tifv3_15.06.69"                 =>       "Paniers Pique-nique", 
+	"tifv3_15.06.70"                 =>       "Pharmacie",   
+	"tifv3_15.06.71"                 =>       "Plats à emporter/Plats cuisinés",   
+	"tifv3_15.06.72"                 =>       "Plats cuisinés", 
+	"tifv3_15.06.73"                 =>       "Point argent",
+	"tifv3_15.06.74"                 =>       "Point courrier",  
+	"tifv3_15.06.75"                 =>       "Réservation aériennes", 
+	"tifv3_15.06.76"                 =>       "Réservation de prestations annexes", 
+	"tifv3_15.06.77"                 =>       "Réservation excursions", 
+	"tifv3_15.06.78"                 =>       "Réservation spectacles", 
+	"tifv3_15.06.80"                 =>       "Réservations de prestations extérieures",   
+	"tifv3_15.06.81"                 =>       "Restaurant",  
+	"tifv3_15.06.82"                 =>       "Restaurant enfants",  
+	"tifv3_15.06.83"                 =>       "Réveillon de Noël pour groupes",
+	"tifv3_15.06.84"                 =>       "Room service",
+	"tifv3_15.06.86"                 =>       "Self service",
+	"tifv3_15.06.87"                 =>       "Séminaire",  
+	"tifv3_15.06.88"                 =>       "Service en chambre",  
+	"tifv3_15.06.89"                 =>       "Surveillance de nuit",
+	"tifv3_15.06.90"                 =>       "Table d'hôte",   
+	"tifv3_15.06.92"                 =>       "Traiteur",
+	"tifv3_15.06.94"                 =>       "Vestiaire",   
+	"tifv3_15.06.98"                 =>       "Ouverture 24/24", 
+	"tifv3_06.03.01.03.01"              =>      "1 épi",                  
+	"tifv3_06.03.01.03.02"              =>      "2 épis",                 
+	"tifv3_06.03.01.03.03"              =>      "3 épis",                 
+	"tifv3_06.03.01.03.04"              =>      "4 épis",                 
+	"tifv3_06.03.01.03.05"              =>      "En cours de classement",  
+	
+"tifv3_06.03.02.01.01"              =>      "Gîtes et Cheval",        
+"tifv3_06.03.02.01.02"              =>      "Gîtes de neige",         
+"tifv3_06.03.02.01.03"              =>      "Gîtes Panda",            
+"tifv3_06.03.02.01.04"              =>      "Gîtes de pêche",        
+"tifv3_06.03.02.01.05"              =>      "Gîtes de Prestige",      
+"tifv3_06.03.02.01.06"              =>      "Vignoble",                
+"tifv3_06.03.02.01.07"              =>      "1 épi",                  
+"tifv3_06.03.02.01.08"              =>      "2 épis",                 
+"tifv3_06.03.02.01.09"              =>      "3 épis",                 
+"tifv3_06.03.02.01.10"              =>      "4 épis",                 
+"tifv3_06.03.02.01.11"              =>      "5 épis",                 
+"tifv3_06.03.02.01.12"              =>      "En cours de classement",  
+	
+	/*on ne ajoute encore d'autres, via des requetes de ce type
+
+SELECT  DISTINCT CONCAT('"tifv3_',  thesaurus, '"') , '=>' , CONCAT('"', lib, '",')
+FROM tifv3_thesaurus
+WHERE   CONCAT('tifv3_',  thesaurus, '') IN (
+ 'tifv3_06.04.01.01.06',
+ 'tifv3_02.01.05.01.01',
+ )
+ OR   CONCAT('tifv3_',  thesaurus, '') LIKE 'tifv3_06.04.01.01.%'
+ OR   CONCAT('tifv3_',  thesaurus, '') LIKE 'tifv3_02.01.05.01.%'
+ OR   CONCAT('tifv3_',  thesaurus, '') LIKE 'tifv3_06.04.01.03.%'
+ 
+ OR   CONCAT('tifv3_',  thesaurus, '') LIKE 'tifv3_02.01.06.01.%'
+ OR   CONCAT('tifv3_',  thesaurus, '') LIKE 'tifv3_06.04.01.04.%'
+ OR   CONCAT('tifv3_',  thesaurus, '') LIKE 'tifv3_02.01.04.01.%'	
+	
+	*/
+	"tifv3_02.01.04.01.01"              =>      "Chambre d'hôtes",                   
+"tifv3_02.01.04.01.02"              =>      "Meublés et Gîtes",                 
+"tifv3_02.01.04.01.03"              =>      "Appartement",                        
+"tifv3_02.01.04.01.04"              =>      "Chalet",                             
+"tifv3_02.01.04.01.05"              =>      "Châteaux et demeures de prestige",  
+"tifv3_02.01.04.01.06"              =>      "Maison",                             
+"tifv3_02.01.05.01.01"              =>      "Hôtels",                            
+"tifv3_02.01.05.01.02"              =>      "Hôtels - restaurant",               
+"tifv3_02.01.06.01.01"              =>      "Camping à la ferme",                
+"tifv3_02.01.06.01.02"              =>      "Terrain de camping classé",         
+"tifv3_02.01.06.01.03"              =>      "Parc résidentiel de loisir",        
+"tifv3_02.01.06.01.04"              =>      "Camp de tourisme - aire naturelle",  
+"tifv3_02.01.06.01.05"              =>      "Camp de tourisme saisonnier",        
+"tifv3_06.04.01.01.01"              =>      "1 étoile",                          
+"tifv3_06.04.01.01.02"              =>      "2 étoiles",                         
+"tifv3_06.04.01.01.03"              =>      "3 étoiles",                         
+"tifv3_06.04.01.01.04"              =>      "4 étoiles",                         
+"tifv3_06.04.01.01.05"              =>      "En cours de classement",             
+"tifv3_06.04.01.01.06"              =>      "Non concerné",                      
+"tifv3_06.04.01.01.07"              =>      "Syndicat d'initiative",              
+"tifv3_06.04.01.01.08"              =>      "Non Classé",                        
+"tifv3_06.04.01.03.01"              =>      "1 étoile",                          
+"tifv3_06.04.01.03.02"              =>      "2 étoiles",                         
+"tifv3_06.04.01.03.03"              =>      "3 étoiles",                         
+"tifv3_06.04.01.03.04"              =>      "4 étoiles",                         
+"tifv3_06.04.01.03.05"              =>      "4 étoiles Luxe",                    
+"tifv3_06.04.01.03.06"              =>      "En cours de classement",             
+"tifv3_06.04.01.03.07"              =>      "Hôtel de préfecture",              
+"tifv3_06.04.01.03.08"              =>      "Sans étoile",                       
+"tifv3_06.04.01.03.09"              =>      "Non Classé",                        
+"tifv3_06.04.01.03.10"              =>      "Tourisme",                           
+"tifv3_06.04.01.04.01"              =>      "1 étoile",                          
+"tifv3_06.04.01.04.02"              =>      "2 étoiles",                         
+"tifv3_06.04.01.04.03"              =>      "3 étoiles",                         
+"tifv3_06.04.01.04.04"              =>      "4 étoiles",                         
+"tifv3_06.04.01.04.05"              =>      "5 étoiles",                         
+"tifv3_06.04.01.04.06"              =>      "En cours de classement",             
+"tifv3_06.04.01.04.07"              =>      "Non Classé",                                 
+"tifv3_06.03.02.02.01"              =>      "1 clé",                  
+"tifv3_06.03.02.02.02"              =>      "2 clés",                 
+"tifv3_06.03.02.02.03"              =>      "3 clés",                 
+"tifv3_06.03.02.02.04"              =>      "4 clés",                 
+"tifv3_06.03.02.02.05"              =>      "5 clés",                 
+"tifv3_06.03.02.02.06"              =>      "En cours de classement",  
+	
+);
+
+B2f_Json::$useBuiltinEncoderDecoder = true;
+
+if (isset($_GET['callback'])) {
+	echo $_GET['callback'] . '(' . B2f_Json::Encode($arrayTradJS) .')';
+} else if (isset($_GET['var'])) {
+	echo 'var ' . $_GET['var'] . ' = {"' . strtolower($_GET['langue']) . '":' . B2f_Json::Encode($arrayTradJS) . '};';
+} else {
+	console.error('erreur dans vos parametres get : callback|var sont obligatoire, callback est prioritaire sur var)');
+}
+
+
+
+//ob_end_flush();
+?>
