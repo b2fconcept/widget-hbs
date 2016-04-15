@@ -49,7 +49,7 @@ Tant que possible nous souhaitons intégrer vos contributions au sein de notre br
  
 ## stabilité
 Ce code est une version beta, son API est amenée à évoluer. 
-L'inteération des systèmes de réservations se fera au cas par cas, ce qui veut dire que :
+L'intégration des systèmes de réservations se fera au cas par cas, ce qui veut dire que :
 * cette partie est instable (API non figée)
 * aucun connecteur n'est encore codé au sein de la fiche détail
 * l'idée actuelle est de créer un widget par connecteur.
