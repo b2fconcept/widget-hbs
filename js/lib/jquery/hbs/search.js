@@ -79,6 +79,7 @@
 		lieuAutocompleteUrl	: '/fr/connectizzautocompletelieu.htm?render_mode=jsonp',
 		reloadOnRouteChange	: false,								//mettre a true par exemple sur une fiche detail afin que lorsqu'on arrive sur une route de type listing, on provoque un reload de la page, ça evite de devoir preparer une fiche produit a pouvoir contenir liste de resultat e moteur de rehcerche
 		datepickerContainer : 'body',								//http://bootstrap-datepicker.readthedocs.org/en/stable/options.html#container
+		communesAutocompleteMinLength : 1,
 		onFormDataChange 	: function() {							//callback appelé lorsqu'un formulaire est modifié
 		
 		},
@@ -291,7 +292,7 @@
 				var CommunesBloodhound = new Bloodhound({ //https://github.com/twitter/typeahead.js/blob/master/doc/bloodhound.md
 					  datumTokenizer: Bloodhound.tokenizers.whitespace,
 					  queryTokenizer: Bloodhound.tokenizers.whitespace,
-		
+					  minLength 	:elementSettings.communesAutocompleteMinLength,
 					  local: [],//pas de var locales
 					  //prefetch :'',//pas de prefetch
 					  remote  : {
@@ -313,7 +314,7 @@
 				var DepartementsBloodhound = new Bloodhound({ //https://github.com/twitter/typeahead.js/blob/master/doc/bloodhound.md
 					  datumTokenizer: Bloodhound.tokenizers.whitespace,
 					  queryTokenizer: Bloodhound.tokenizers.whitespace,
-		
+					  minLength 	:elementSettings.communesAutocompleteMinLength,
 					  local: [],//pas de var locales
 					  //prefetch :'',//pas de prefetch
 					  remote  : {
