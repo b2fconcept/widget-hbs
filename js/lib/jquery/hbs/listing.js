@@ -71,7 +71,8 @@
 		sousTitreBalise				: 'h4',
 		descTruncateNbChar			: 300,
 		doUseTwoColumns				: 1,
-		imgClasses					: 'img-rounded img-responsive'
+		imgClasses					: 'img-rounded img-responsive',
+		listeInsee					: ''
 	};
 	
 
@@ -123,7 +124,6 @@
 	
 	//init GLOBAL valable pour tous les forms manipulés
 	function _initGlobal() {
-		//HandlebarsRegisterHelper.call(this);
 		
 		$(document).data(pluginName+'pause', false);
 		
@@ -134,11 +134,6 @@
 		
 		$(document).on('hbsPluginArmageddon.'+pluginName, _armageddon);//permet de retirer ce plugin, nescessaire pour le themeroller qui l'init pleins de fois (on doit donc proprement se retirer avant de se re-init)
 		
-		/*
-		if (true == $(document).data('b2fHbsSearch.initFinished')) {
-			$(document).trigger(settings.emptyAndFetchNewDataOnEvent);   
-		}
-		*/
 	}
 	
 	//init LOCAL fait une fois par formulaire manipulé
@@ -170,7 +165,7 @@
 	    
 		var page = $[settings.formulaireSeachWidgetName]('getPage');
 		
-		//ajax : lorsque les data changent, il faut rafraichir tous les moteurs afin qu'ils soient mis à jour, pour cela, on interroge le serveur avec le snouveaux params
+		//ajax : lorsque les data changent, il faut rafraichir tous les moteurs afin qu'ils soient mis à jour, pour cela, on interroge le serveur avec les nouveaux params
 		$.ajax({
 				url			: settings.fetchNewDataHost + settings.fetchNewDataUrl,
 				data		: formData,

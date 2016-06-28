@@ -72,19 +72,21 @@
 	
 	
 	$[ pluginName ].defaults = {
-		formSelector 		: 'form[data-type="hbs-basic-search"]',	//le plugin sera acif pour tous ces elements
-		template			: 'hbs-basic-search-default-template',	//le template qui servira a afficher le formulaire
-		moteurDeTemplate	: $.b2fHbsTemplate,//le plugin de template est cens� �tre pre-initialis�
-		lieuAutocompleteHost: 'http://hbscms.caylus.b2f-concept.net',
-		lieuAutocompleteUrl	: '/fr/connectizzautocompletelieu.htm?render_mode=jsonp',
-		reloadOnRouteChange	: false,								//mettre a true par exemple sur une fiche detail afin que lorsqu'on arrive sur une route de type listing, on provoque un reload de la page, ça evite de devoir preparer une fiche produit a pouvoir contenir liste de resultat e moteur de rehcerche
-		datepickerContainer : 'body',								//http://bootstrap-datepicker.readthedocs.org/en/stable/options.html#container
-		communesAutocompleteMinLength : 1,
-		onFormDataChange 	: function() {							//callback appelé lorsqu'un formulaire est modifié
+		formSelector 					: 'form[data-type="hbs-basic-search"]',	//le plugin sera acif pour tous ces elements
+		template						: 'hbs-basic-search-default-template',	//le template qui servira a afficher le formulaire
+		moteurDeTemplate				: $.b2fHbsTemplate,//le plugin de template est cens� �tre pre-initialis�
+		lieuAutocompleteHost			: 'http://hbscms.caylus.b2f-concept.net',
+		lieuAutocompleteUrl				: '/fr/connectizzautocompletelieu.htm?render_mode=jsonp',
+		reloadOnRouteChange				: false,								//mettre a true par exemple sur une fiche detail afin que lorsqu'on arrive sur une route de type listing, on provoque un reload de la page, ça evite de devoir preparer une fiche produit a pouvoir contenir liste de resultat e moteur de rehcerche
+		datepickerContainer 			: 'body',								//http://bootstrap-datepicker.readthedocs.org/en/stable/options.html#container
+		communesAutocompleteMinLength 	: 1,
+		listeInsee						: '',
+		onFormDataChange 				: function() {							//callback appelé lorsqu'un formulaire est modifié
 		
-		},
+		}
 		
 	};
+	
 	
 
 	function setPage(newPage) {
@@ -288,6 +290,12 @@
 				
 				//console.debug('hbsDatepicker : ', $currentHbsDatepicker);
 				
+				var filtreAutocomplete = [];//exemple de resutlat du filter : filter=[["in","b2f.geo.commune.codeINSEE",[48193,48187,48180,48089]]]
+				if (elementSettings.listeInsee.length > 0) {
+					filtreAutocomplete.push(["in","b2f.geo.commune.codeINSEE",elementSettings.listeInsee.split(',')]);
+				}                    
+				
+				
 				//recup data du moteur de suggestion de communes
 				var CommunesBloodhound = new Bloodhound({ //https://github.com/twitter/typeahead.js/blob/master/doc/bloodhound.md
 					  datumTokenizer: Bloodhound.tokenizers.whitespace,
@@ -296,7 +304,7 @@
 					  local: [],//pas de var locales
 					  //prefetch :'',//pas de prefetch
 					  remote  : {
-						url			: elementSettings.lieuAutocompleteHost + elementSettings.lieuAutocompleteUrl,
+						url			: elementSettings.lieuAutocompleteHost + elementSettings.lieuAutocompleteUrl + '&filter=' + JSON.stringify(filtreAutocomplete),
 						//wildcard 	: '#QUERY',
 						prepare: function(query, settings) {
 		                    settings.dataType 	= "jsonp"
@@ -318,7 +326,7 @@
 					  local: [],//pas de var locales
 					  //prefetch :'',//pas de prefetch
 					  remote  : {
-						url			: elementSettings.lieuAutocompleteHost + elementSettings.lieuAutocompleteUrl,
+						url			: elementSettings.lieuAutocompleteHost + elementSettings.lieuAutocompleteUrl + '&filter=' + JSON.stringify(filtreAutocomplete),
 						//wildcard 	: '#QUERY',
 						prepare: function(query, settings) {
 		                    settings.dataType 	= "jsonp"
@@ -515,7 +523,7 @@
 			}
 		}
 	    
-		//ici, on duplique la valeur dans tous les formulaires pris en charge par le widget, d'apres mes recherches, ça ne devrait pas lancer l'evenemtn change, si ça le change, il faudra trouver une solution de contournement, notamment regarder qui l'a lancé au début de cette fonciton afin den ne pas tourner en boucle
+		//ici, on duplique la valeur dans tous les formulaires pris en charge par le widget, d'apres mes recherches, ça ne devrait pas lancer l'evenement change, si ça le change, il faudra trouver une solution de contournement, notamment regarder qui l'a lancé au début de cette fonciton afin den ne pas tourner en boucle
 	    $(settings.formSelector).each(function() {
 	    	var $thisFormSelectorCurrElemt = $(this);
 	    	$.each(dataSrc, function() {
@@ -525,7 +533,6 @@
 	    		
 	    		if ($thisFormSelectorCurrElemtInput.length > 0) {
 	    			$thisFormSelectorCurrElemtInput.val(thisarrayItem.value);
-					//console.debug('thisFormSelectorCurrElemtInput update : ', thisarrayItem.name, thisarrayItem.value, $thisFormSelectorCurrElemtInput.val(), thisarrayItem, $thisFormSelectorCurrElemtInput);
 	    		} 
 	    		
 	    		listDistinctFormFieldValuesByNames[thisarrayItem.name] = thisarrayItem.value;
@@ -562,6 +569,13 @@
 		
 		arrayAuBonFormat = serializeArray(listDistinctFormFieldValuesByNames);
 		arrayAuBonFormat.push({"name":"page", "value":page});
+		
+		if (settings.listeInsee.length > 0) {
+			arrayAuBonFormat.push({"name":"listeInsee", "value":settings.listeInsee});
+		}
+		
+		
+		
 		
 		return arrayAuBonFormat;
 	};
