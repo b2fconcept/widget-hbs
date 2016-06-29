@@ -81,12 +81,12 @@
 		datepickerContainer 			: 'body',								//http://bootstrap-datepicker.readthedocs.org/en/stable/options.html#container
 		communesAutocompleteMinLength 	: 1,
 		listeInsee						: '',
+		parametresAdditionnels				: null, 								//
 		onFormDataChange 				: function() {							//callback appelé lorsqu'un formulaire est modifié
 		
 		}
 		
 	};
-	
 	
 
 	function setPage(newPage) {
@@ -479,6 +479,8 @@
 			get['date'] = $.fn.datepicker.DPGlobal.formatDate(new Date(get['debut']), 'D d M yyyy', 'fr');
 		}
 		
+		
+		
 		$(settings.formSelector).first().trigger('change', [{pushState:false, dataSrc:get}]);
 	}
 	
@@ -574,6 +576,10 @@
 			arrayAuBonFormat.push({"name":"listeInsee", "value":settings.listeInsee});
 		}
 		
+		
+		if (settings.parametresAdditionnels != null) {
+			arrayAuBonFormat.push({"name":"parametresAdditionnels", "value":JSON.stringify(settings.parametresAdditionnels)});
+		}
 		
 		
 		

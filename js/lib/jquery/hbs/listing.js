@@ -71,8 +71,7 @@
 		sousTitreBalise				: 'h4',
 		descTruncateNbChar			: 300,
 		doUseTwoColumns				: 1,
-		imgClasses					: 'img-rounded img-responsive',
-		listeInsee					: ''
+		imgClasses					: 'img-rounded img-responsive'
 	};
 	
 

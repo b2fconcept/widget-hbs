@@ -77,7 +77,8 @@
 		moteurDeTraduction	: 'b2fHbsTranslate',
 		customHelpers		: {},//permet de surcharger les helper de ce plugin
 		googleMapsKey		: false,
-		remoteTplGetter		: "http://hbscms.caylus.b2f-concept.net/fr/hbs-templates-getter.htm"
+		remoteTplGetter		: "http://hbscms.caylus.b2f-concept.net/fr/hbs-templates-getter.htm",
+		lienDetailHandler	: false
 	};
 	
 	function render(options) {
@@ -315,6 +316,15 @@
 	
 
 	defaultHelper.lienDetail = function(context, options) {
+	
+		if (false == settings.lienDetailHandler || '' == settings.lienDetailHandler || 'lienDetail' == settings.lienDetailHandler) {
+			return callHelper(this, 'lienDetailDefaultHandler', context, options);
+		} else {
+			return callHelper(this, settings.lienDetailHandler, context, options);
+		}
+	}
+
+	defaultHelper.lienDetailDefaultHandler = function(context, options) {
 		var contexteDAppel 	= this;
 		
 		
@@ -347,7 +357,44 @@
 			
 			
 		
-			return options.fn(this, {data: $.extend(data, {"urlReEcriteHost":settings.pagesHost, "urlReEcrite":urlReEcrite, "paramsUrlDetail":paramsUrlDetail, "paramsUrlDetailStr":JSON.stringify(paramsUrlDetail)})});
+			return options.fn(this, {data: $.extend(data, {"lienSortant":false, "urlReEcriteHost":settings.pagesHost, "urlReEcrite":urlReEcrite, "paramsUrlDetail":paramsUrlDetail, "paramsUrlDetailStr":JSON.stringify(paramsUrlDetail)})});
+		} 
+		
+		return urlReEcrite;
+	}
+	
+	defaultHelper.lienDetailLienSortantHandler = function(context, options) {
+		var contexteDAppel 	= this;
+		
+		var paramsUrlDetail	= {};
+		
+		var urlReEcrite = callHelper(contexteDAppel, 'fromThesaurus', 'b2f.url.ext.vel', {hash : {index : 0}}) 
+
+		var parser 	= document.createElement('a');
+		parser.href = urlReEcrite;
+		/* cf : https://gist.github.com/jlong/2428561, http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
+		 *
+		 *
+		parser.href = "http://example.com:3000/pathname/?search=test#hash";
+		 * 
+		parser.protocol; // => "http:"
+		parser.host;     // => "example.com:3000"
+		parser.hostname; // => "example.com"
+		parser.port;     // => "3000"
+		parser.pathname; // => "/pathname/"
+		parser.hash;     // => "#hash"
+		parser.search;   // => "?search=test"
+		parser.origin;   // => "http://example.com:3000"
+		*/
+		
+		if (typeof options.fn !== "undefined") {
+			if (options.data) {
+				var data = Handlebars.createFrame(options.data);
+			} else {
+				var data = {};
+			}
+		
+			return options.fn(this, {data: $.extend(data, {"lienSortant":true,"urlReEcriteHost":parser.protocol+'//'+parser.host, "urlReEcrite":parser.pathname+parser.search+parser.hash, "paramsUrlDetail":paramsUrlDetail, "paramsUrlDetailStr":JSON.stringify(paramsUrlDetail)})});
 		} 
 		
 		return urlReEcrite;
@@ -518,6 +565,8 @@
 			$return = thesaurus;
 		} else if (typeof this[thesaurus] !== "undefined") {
 			$return = this[thesaurus];
+		} else if (typeof this.computedFields !== "undefined" && typeof this.computedFields[thesaurus] !== "undefined") {
+			$return = this.computedFields[thesaurus];
 		} else if (typeof this.caracteristiques !== "undefined" && typeof this.caracteristiques[thesaurus] !== "undefined") {
 			$return = this.caracteristiques[thesaurus];
 		} else if (typeof this.caracteristiques_libelle !== "undefined" && typeof this.caracteristiques_libelle[thesaurus] !== "undefined") {
