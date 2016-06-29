@@ -567,10 +567,10 @@
 			$return = this[thesaurus];
 		} else if (typeof this.computedFields !== "undefined" && typeof this.computedFields[thesaurus] !== "undefined") {
 			$return = this.computedFields[thesaurus];
-		} else if (typeof this.caracteristiques !== "undefined" && typeof this.caracteristiques[thesaurus] !== "undefined") {
-			$return = this.caracteristiques[thesaurus];
 		} else if (typeof this.caracteristiques_libelle !== "undefined" && typeof this.caracteristiques_libelle[thesaurus] !== "undefined") {
 			$return = this.caracteristiques_libelle[thesaurus];
+		} else if (typeof this.caracteristiques !== "undefined" && typeof this.caracteristiques[thesaurus] !== "undefined") {
+			$return = this.caracteristiques[thesaurus];
 		} else {
 			$return = null;
 		}
